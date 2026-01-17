@@ -13,14 +13,15 @@ sudo bash ./build.sh
 ```bash
 sudo bash ./addUser.sh username ip 1194
 ```
-此时在当前文件夹会生成一个 username.tar.gz的压缩包
-4.在客户端安装openvpn,启动openvpn
-5.解压username.tar.gz,进入username,usernameInfo
-6.双击username.ovpn，在openvpn中点击连接
-7.del.sh是删除服务器端口转发功能（删除本项目）
-8.delUser是删除用户
+此时在当前文件夹会生成一个 username.tar.gz的压缩包  
+4.在客户端安装openvpn,启动openvpn  
+5.解压username.tar.gz,进入username,usernameInfo  
+6.双击username.ovpn，在openvpn中点击连接  
+7.del.sh是删除服务器端口转发功能（删除本项目）  
+8.delUser是删除用户  
 ```bash
 sudo bash ./delUser.sh username
 ```
-9.前端
-127.0.0.1:2026
+9.前端  
+127.0.0.1:2026  
+暂时没有和服务器交互能力，只是装模作样生成订单一下，等待更新吧~
