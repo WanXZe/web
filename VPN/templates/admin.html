@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>管理员后台</title>
+	<link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+	<h1>管理员后台</h1>
+	<p><a href="{{ url_for('index') }}">返回商店</a></p>
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			<ul>
+			{% for m in messages %}<li>{{ m }}</li>{% endfor %}
+			</ul>
+		{% endif %}
+	{% endwith %}
+
+	<h2>添加商品</h2>
+	<form method="post">
+		<input type="hidden" name="action" value="add">
+		<label>名称: <input name="name"></label>
+		<label>价格: <input name="price" type="number" value="0"></label>
+		<label>库存: <input name="stock" type="number" value="0"></label>
+		<button type="submit">添加</button>
+	</form>
+
+	<h2>商品列表</h2>
+	<table border="1" cellpadding="6">
+		<tr><th>ID</th><th>名称</th><th>价格</th><th>库存</th><th>操作</th></tr>
+		{% for p in products %}
+			<tr>
+				<td>{{ p.id }}</td>
+				<td>{{ p.name }}</td>
+				<td>{{ p.price }}</td>
+				<td>{{ p.stock }}</td>
+				<td>
+					<form style="display:inline" method="post">
+						<input type="hidden" name="action" value="restock">
+						<input type="hidden" name="product_id" value="{{ p.id }}">
+						<input name="add" type="number" value="10" style="width:60px">
+						<button type="submit">补货</button>
+					</form>
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+
+	<h2>订单列表</h2>
+	<table border="1" cellpadding="6">
+		<tr><th>ID</th><th>用户</th><th>商品</th><th>数量</th><th>状态</th><th>时间</th></tr>
+		{% for o in orders %}
+			<tr>
+				<td>{{ o.id }}</td>
+				<td>{{ o.user_name }}</td>
+				<td>{{ o.product_name }}</td>
+				<td>{{ o.amount }}</td>
+				<td>{{ o.status }}</td>
+				<td>{{ o.created_at }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>购买</title>
+	<link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+	<h1>购买 - {{ product.name }}</h1>
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			<ul>
+			{% for m in messages %}<li>{{ m }}</li>{% endfor %}
+			</ul>
+		{% endif %}
+	{% endwith %}
+	<p>价格: {{ product.price }} | 库存: {{ product.stock }}</p>
+	<form method="post">
+		<label>数量: <input name="amount" value="1" type="number" min="1" max="{{ product.stock }}"></label><br>
+		<button type="submit">确认购买（模拟支付）</button>
+	</form>
+	<p><a href="{{ url_for('index') }}">返回商品页</a></p>
+</body>
+</html>

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}管理后台 - WanXZe's Blog{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="grid grid-2">
+        <!-- 用户管理 -->
+        <div class="card">
+            <h2 style="margin-bottom: 1.5rem;">
+                <i class="fas fa-users" style="color: var(--secondary);"></i> 用户管理
+            </h2>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for user in users %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; 
+                                padding: 1rem; margin-bottom: 0.5rem; background: var(--background); 
+                                border-radius: var(--radius-md);">
+                        <div>
+                            <strong>{{user['user_name']}}</strong>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 0.5rem;">
+                                (ID: {{user['id']}})
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 文章管理 -->
+        <div class="card">
+            <h2 style="margin-bottom: 1.5rem;">
+                <i class="fas fa-file-alt" style="color: var(--secondary);"></i> 文章管理
+            </h2>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for article in articles %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; 
+                                padding: 1rem; margin-bottom: 0.5rem; background: var(--background); 
+                                border-radius: var(--radius-md);">
+                        <div>
+                            <strong>{{article['title']}}</strong>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                作者: {{article['author']}} · ID: {{article['id']}}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 删除操作 -->
+    <div class="card" style="margin-top: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #ef4444, #f87171); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-trash"></i>
+            </div>
+            <h2 style="margin: 0; color: var(--text-primary);">删除操作</h2>
+        </div>
+        
+        <!-- 用户删除表单 -->
+        <form action="/admin" method="POST" style="margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: end;">
+                <div>
+                    <label class="form-label" style="font-weight: 600;">用户表</label>
+                </div>
+                <div>
+                    <label class="form-label" style="font-weight: 600;">ID</label>
+                    <input type="hidden" name="table_name" value="users">
+                    <input type="text" name="del_id" class="form-control" placeholder="输入要删除的用户ID" required>
+                </div>
+                <button type="submit" class="btn" style="background: #ef4444; color: white; border: none;">
+                    <i class="fas fa-trash"></i> 删除用户
+                </button>
+            </div>
+        </form>
+        
+        <!-- 文章删除表单 -->
+        <form action="/admin" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: end;">
+                <div>
+                    <label class="form-label" style="font-weight: 600;">文章表</label>
+                </div>
+                <div>
+                    <label class="form-label" style="font-weight: 600;">ID</label>
+                    <input type="hidden" name="table_name" value="arcticles">
+                    <input type="text" name="del_id" class="form-control" placeholder="输入要删除的文章ID" required>
+                </div>
+                <button type="submit" class="btn" style="background: #ef4444; color: white; border: none;">
+                    <i class="fas fa-trash"></i> 删除文章
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="card" style="margin-top: 2rem;">
+        asdasdasd
+    </div>
+</div>
+
+<style>
+    /* 自定义滚动条 */
+    .card div[style*="overflow-y"]::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .card div[style*="overflow-y"]::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+    }
+    
+    .card div[style*="overflow-y"]::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+    }
+    
+    /* 删除按钮悬停效果 */
+    .btn[style*="background: #ef4444"]:hover {
+        background: #dc2626 !important;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}

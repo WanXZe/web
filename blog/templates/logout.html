@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}登出 - WanXZe's Blog{% endblock %}
+{% block content %}
+</head>
+<body>
+    {% if message %}
+        {{message}}
+    {% endif %}
+    <script>
+        alert("你已经成功登出账户！");
+        window.location.href = "/";
+    </script>
+</body>
+{% endblock %}
