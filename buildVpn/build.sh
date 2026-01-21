@@ -9,14 +9,16 @@ if [[ $? != 0 ]];then
 	exit 0
 fi
 
-# 2. 开启内核转发+生效验证
-sed -i 's/^net.ipv4.ip_forward =.*/net.ipv4.ip_forward = 1/' /etc/sysctl.conf || echo 1 > /proc/sys/net/ipv4/ip_forward
-sysctl -p
-
 if [[ $(sysctl -n net.ipv4.ip_forward) == 1 ]];then
-    echo "内核转发开启成功！"
+    echo "内核转发已开启！"
 else
-    echo "内核转发开启失败！请自行DEBUG！脚本已退出" 
+    echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
+    if [[ $(sysctl -n net.ipv4.ip_forward) == 1 ]];then
+        echo "内核转发开启成功！"
+    else
+        echo "内核转发开启失败！请自行DEBUG！脚本已退出" 
+        exit 0
+    fi
     exit 0
 fi
 
@@ -39,22 +41,18 @@ cp -r /usr/share/easy-rsa /etc/openvpn/easy-rsa
 cd /etc/openvpn/easy-rsa
 
 # ========== 第二步：初始化证书环境（PKI公钥基础设施） ==========
-./easyrsa init-pki
-
-# ========== 第三步：生成【根CA证书】(最核心，所有证书的根，无密码版，企业用方便) ==========
-./easyrsa build-ca nopass
-
-# ========== 第四步：生成【服务端证书+密钥】 ==========
-./easyrsa build-server-full server nopass
-
-# ========== 第五步：生成【DH密钥】(密钥交换，提升加密强度，4096位) ==========
-.easyrsa gen-dh
-
-# ========== 第六步：生成【tls-auth密钥】(防DDOS/中间人攻击，强制开启) ==========
-openvpn --genkey --secret ../keys/tls-auth.key
-
-cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-auth.key ../server/
-echo "OpenVPN全套证书生成成功"
+if [ -d './pki' ];then
+    echo "目录 PKI 已存在，跳过初始化"
+    :
+else
+    ./easyrsa init-pki
+    ./easyrsa build-ca nopass
+    ./easyrsa build-server-full server nopass
+    ./easyrsa gen-dh
+    openvpn --genkey --secret ../keys/tls-auth.key
+    cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-auth.key ../server/
+    echo "OpenVPN全套证书生成成功"
+fi
 
 # 6. OpenVPN服务端核心配置
 echo '
@@ -104,7 +102,7 @@ ufw allow ssh
 ufw --force enable
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo "防火墙配置完成，放行1194/UDP、2026/TCP、SSH端口"
-
+mkdir -p /var/log/vpn
 # 8. OpenVPN服务管理：启动+开机自启
 systemctl enable --now openvpn@server
 systemctl restart openvpn@server
@@ -530,4 +528,3 @@ pip3 install -r ./web/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simp
 nohup python3 ./web/app.py >> /var/log/vpn/python.log 2>&1 &
 sleep 2
 echo "📌 日志文件路径：/var/log/openvpn.log"
-

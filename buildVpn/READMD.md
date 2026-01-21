@@ -25,3 +25,14 @@ sudo bash ./delUser.sh username
 9.前端  
 127.0.0.1:2026  
 暂时没有和服务器交互能力，只是装模作样生成订单一下，等待更新吧~
+
+问题
+Q：
+```bash
+root@wanxz-server:/vpn# /vpn/build.sh
+内核转发开启失败！请自行DEBUG！脚本已退出
+```
+A:去 /etc/sysctl.conf 加一个'net.ipv4.ip_forward = 1'或者
+```bash
+echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
+```
