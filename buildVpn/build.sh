@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-path=$(dirname $0)
+path=$(dirname $(readlink -f $0))
 # 检查系统是否为ub
 # 1. 检查root权限
 ls /root >/dev/null 2>&1
@@ -36,25 +36,24 @@ echo "安装OpenVPN、EasyRSA、Python3、Flask成功"
 # ========== 第一步：创建证书工作目录，复制easy-rsa模板 ==========
 mkdir -p /etc/openvpn/{server,client,keys}
 cp -r /usr/share/easy-rsa /etc/openvpn/easy-rsa
+cd /etc/openvpn/easy-rsa
 
 # ========== 第二步：初始化证书环境（PKI公钥基础设施） ==========
-/etc/openvpn/easy-rsa/easyrsa init-pki
+./easyrsa init-pki
 
 # ========== 第三步：生成【根CA证书】(最核心，所有证书的根，无密码版，企业用方便) ==========
-/etc/openvpn/easy-rsa/easyrsa build-ca nopass
+./easyrsa build-ca nopass
 
 # ========== 第四步：生成【服务端证书+密钥】 ==========
-/etc/openvpn/easy-rsa/easyrsa build-server-full server nopass
+./easyrsa build-server-full server nopass
 
 # ========== 第五步：生成【DH密钥】(密钥交换，提升加密强度，4096位) ==========
-/etc/openvpn/easy-rsa/easyrsa gen-dh
+.easyrsa gen-dh
 
 # ========== 第六步：生成【tls-auth密钥】(防DDOS/中间人攻击，强制开启) ==========
-openvpn --genkey --secret /etc/openvpn/keys/tls-auth.key
+openvpn --genkey --secret ../keys/tls-auth.key
 
-mv ./pki /etc/openvpn/easy-rsa/
-
-cp /etc/openvpn/easy-rsa/pki/ca.crt /etc/openvpn/easy-rsa/pki/issued/server.crt /etc/openvpn/easy-rsa/pki/private/server.key /etc/openvpn/easy-rsa/pki/dh.pem /etc/openvpn/keys/tls-auth.key /etc/openvpn/server/
+cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-auth.key ../server/
 echo "OpenVPN全套证书生成成功"
 
 # 6. OpenVPN服务端核心配置
@@ -88,7 +87,6 @@ user nobody               # 以最小权限用户运行，防止提权
 group nogroup
 persist-key
 persist-tun               # 断线重连时保留配置，避免反复认证
-crl-verify /etc/openvpn/server/crl.pem   #吊销的用户无法连接
 
 # ===================== 合规审计日志配置（必须项，监管必查，红线！） =====================
 status /var/log/vpn/openvpn-status.log  # 在线用户状态日志：谁在线、IP、连接时间
@@ -115,6 +113,9 @@ if [[ $(systemctl is-active openvpn@server) == "active" ]];then
 else
     echo "OpenVPN服务启动失败，请查看日志 /var/log/openvpn.log"
 fi
+
+
+cd $path
 
 # 生成相关脚本
 mkdir -p ./web/{templates,static}
