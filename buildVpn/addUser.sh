@@ -34,6 +34,7 @@ cipher AES-256-GCM
 auth SHA512
 tls-version-min 1.2
 verb 3
+allow-compression no
 " > ./$1Info/$1.ovpn
 
 cp /etc/openvpn/easy-rsa/pki/ca.crt ./$1Info/

@@ -74,15 +74,15 @@ tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384 # 强加密套件组合
 
 # ===================== VPN网段与路由配置（核心，按需修改） =====================
 server 10.8.0.0 255.255.255.0  # OpenVPN的虚拟网段，不要和你的企业内网网段重复即可
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 1.1.1.1"
 ifconfig-pool-persist ipp.txt   # 记录客户端IP分配，重启后不变，方便审计
-push "route 192.168.1.0 255.255.255.0"  # 推送你的【企业内网网段】，员工连上VPN后可访问这个网段
-# 【跨境业务必加】推送你获批的境外业务网段/IP，比如：push "route 203.xx.xx.0 255.255.255.0"
 
 # ===================== 安全加固配置 =====================
 keepalive 10 120          # 心跳检测：10秒发一次包，120秒无响应则断开
-comp-lzo no               # 禁用压缩，防止CRIME攻击，合规要求
-user nobody               # 以最小权限用户运行，防止提权
-group nogroup
+allow-compression no      # 禁用压缩，防止CRIME攻击，合规要求
+# user nobody               # 以最小权限用户运行，防止提权
+# group nogroup
 persist-key
 persist-tun               # 断线重连时保留配置，避免反复认证
 
