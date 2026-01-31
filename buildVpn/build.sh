@@ -22,12 +22,11 @@ else
     fi
 fi
 
-# 4. 安装依赖：openvpn+easy-rsa+python3+pip+flask
+# 4. 安装依赖：openvpn+easy-rsa+python3+pip
 apt install -y openvpn easy-rsa python3 python3-pip iptables
 # 如果是国外服务器可以去掉镜像
 if [[ $? != 0 ]];then
-	apt update -y && apt install -y openvpn easy-rsa python3 python3-pip ufw
-	pip3 install flask --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
+	apt update -y && apt install -y openvpn==2.4.12 easy-rsa python3 python3-pip iptables
 	if [[ $? != 0 ]];then
 		echo "安装依赖包失败，请检查网络"
 		exit 1
@@ -75,14 +74,14 @@ tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384 # 强加密套件组合
 # ===================== VPN网段与路由配置（核心，按需修改） =====================
 server 10.8.0.0 255.255.255.0  # OpenVPN的虚拟网段，不要和你的企业内网网段重复即可
 ifconfig-pool-persist ipp.txt   # 记录客户端IP分配，重启后不变，方便审计
-push "route 192.168.1.0 255.255.255.0"  # 推送你的【企业内网网段】，员工连上VPN后可访问这个网段
-# 【跨境业务必加】推送你获批的境外业务网段/IP，比如：push "route 203.xx.xx.0 255.255.255.0"
+
 
 # ===================== 安全加固配置 =====================
 keepalive 10 120          # 心跳检测：10秒发一次包，120秒无响应则断开
-comp-lzo no               # 禁用压缩，防止CRIME攻击，合规要求
-user nobody               # 以最小权限用户运行，防止提权
-group nogroup
+comp-lzo no
+# allow-compression no               # 禁用压缩，防止CRIME攻击，合规要求
+# user nobody               # 以最小权限用户运行，防止提权
+# group nogroup
 persist-key
 persist-tun               # 断线重连时保留配置，避免反复认证
 
@@ -96,6 +95,7 @@ mute 20                   # 抑制重复日志，避免日志刷屏
 # 7. 防火墙配置 + NAT（使用 iptables）
 # 检测公网接口（用于 NAT）
 PUB_IF=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i=="dev") print $(i+1)}' | head -n1)
+
 if [ -z "$PUB_IF" ]; then
     PUB_IF=$(ip route | awk '/default/ {print $5; exit}')
 fi
@@ -124,10 +124,12 @@ if [[ $(systemctl is-active openvpn@server) == "active" ]];then
 else
     echo "OpenVPN服务启动失败，请查看日志 /var/log/openvpn.log"
 fi
-# 9. 返回脚本目录
+
+
 cd $path
+
 # 10. 启动网页管理系统+后台运行+日志持久化
-pip3 install -r ./web/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-nohup python3 ./web/app.py >> /var/log/vpn/python.log 2>&1 &
+# pip3 install -r ./web/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# nohup python3 ./web/app.py >> /var/log/vpn/python.log 2>&1 &
 sleep 2
 echo "📌 日志文件路径：/var/log/openvpn.log"
