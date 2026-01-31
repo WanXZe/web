@@ -49,12 +49,14 @@ else
     ./easyrsa build-ca nopass
     ./easyrsa build-server-full server nopass
     ./easyrsa gen-dh
-    openvpn --genkey --secret ../keys/tls-auth.key
+    # 使用 tls-crypt 替代 tls-auth：加密并隐藏控制通道，降低伪造握手风险
+    openvpn --genkey --secret ../keys/tls-crypt.key
     # 生成 CRL（证书撤销列表）以支持证书撤销管理
     ./easyrsa gen-crl
-    cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-auth.key ./pki/crl.pem ../server/
+    cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-crypt.key ./pki/crl.pem ../server/
     chmod 644 ../server/crl.pem
-    echo "OpenVPN全套证书（含 CRL）生成成功"
+    chmod 600 ../server/tls-crypt.key
+    echo "OpenVPN全套证书（含 CRL & tls-crypt）生成成功"
 fi
 
 # 6. OpenVPN服务端核心配置
@@ -70,7 +72,8 @@ dh /etc/openvpn/server/dh.pem       # DH密钥路径
 topology subnet
 
 # ===================== 合规强加密配置（监管要求，禁止修改弱加密） =====================
-tls-auth /etc/openvpn/server/tls-auth.key 0  # 防攻击密钥，0代表服务端
+# 使用 tls-crypt 加密并隐藏控制通道，能减少无效/恶意握手和日志噪音
+tls-crypt /etc/openvpn/server/tls-crypt.key
 # 证书撤销列表（CRL）路径，用于撤销客户端证书
 crl-verify /etc/openvpn/server/crl.pem
 cipher AES-256-GCM        # 核心加密算法：AES-256位，目前最安全的对称加密，国密合规
