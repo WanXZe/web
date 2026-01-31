@@ -29,19 +29,18 @@ persist-tun
 ca ca.crt
 cert $1.crt
 key $1.key
-tls-crypt tls-crypt.key
+tls-auth tls-auth.key 1
 cipher AES-256-GCM
 auth SHA512
 tls-version-min 1.2
 verb 3
 allow-compression no
-
 " > ./$1Info/$1.ovpn
 
 cp /etc/openvpn/easy-rsa/pki/ca.crt ./$1Info/
-cp /etc/openvpn/easy-rsa/pki/issued/$1.crt ./$1Info/
-cp /etc/openvpn/easy-rsa/pki/private/$1.key ./$1Info/
-cp /etc/openvpn/server/tls-crypt.key ./$1Info/
+mv /etc/openvpn/easy-rsa/pki/issued/$1.crt ./$1Info/
+mv /etc/openvpn/easy-rsa/pki/private/$1.key ./$1Info/
+cp /etc/openvpn/server/tls-auth.key ./$1Info/
 
 tar -czvf $1.tar.gz ./$1Info
 

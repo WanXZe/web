@@ -49,15 +49,10 @@ else
     ./easyrsa build-ca nopass
     ./easyrsa build-server-full server nopass
     ./easyrsa gen-dh
-    # 使用 tls-crypt 替代 tls-auth：加密并隐藏控制通道，降低伪造握手风险
-    openvpn --genkey --secret ../keys/tls-crypt.key
-    # 生成 CRL（证书撤销列表）以支持证书撤销管理
-    ./easyrsa gen-crl
-    cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-crypt.key ./pki/crl.pem ../server/
-    chmod 644 ../server/crl.pem
-    chmod 600 ../server/tls-crypt.key
-    echo "OpenVPN全套证书（含 CRL & tls-crypt）生成成功"
+    openvpn --genkey --secret ../keys/tls-auth.key
+    cp ./pki/ca.crt ./pki/issued/server.crt ./pki/private/server.key ./pki/dh.pem ../keys/tls-auth.key ../server/
 fi
+echo "OpenVPN全套证书生成成功"
 
 # 6. OpenVPN服务端核心配置
 echo '
@@ -69,13 +64,9 @@ ca /etc/openvpn/server/ca.crt       # CA根证书路径
 cert /etc/openvpn/server/server.crt # 服务端证书路径
 key /etc/openvpn/server/server.key  # 服务端密钥路径（保密）
 dh /etc/openvpn/server/dh.pem       # DH密钥路径
-topology subnet
 
 # ===================== 合规强加密配置（监管要求，禁止修改弱加密） =====================
-# 使用 tls-crypt 加密并隐藏控制通道，能减少无效/恶意握手和日志噪音
-tls-crypt /etc/openvpn/server/tls-crypt.key
-# 证书撤销列表（CRL）路径，用于撤销客户端证书
-crl-verify /etc/openvpn/server/crl.pem
+tls-auth /etc/openvpn/server/tls-auth.key 0  # 防攻击密钥，0代表服务端
 cipher AES-256-GCM        # 核心加密算法：AES-256位，目前最安全的对称加密，国密合规
 auth SHA512               # 校验算法：SHA512，防止数据篡改
 tls-version-min 1.2       # 禁用低版本TLS，仅用TLS1.2+，杜绝安全漏洞
@@ -83,15 +74,15 @@ tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384 # 强加密套件组合
 
 # ===================== VPN网段与路由配置（核心，按需修改） =====================
 server 10.8.0.0 255.255.255.0  # OpenVPN的虚拟网段，不要和你的企业内网网段重复即可
-push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 1.1.1.1"
 ifconfig-pool-persist ipp.txt   # 记录客户端IP分配，重启后不变，方便审计
+push "route 192.168.1.0 255.255.255.0"  # 推送你的【企业内网网段】，员工连上VPN后可访问这个网段
+# 【跨境业务必加】推送你获批的境外业务网段/IP，比如：push "route 203.xx.xx.0 255.255.255.0"
 
 # ===================== 安全加固配置 =====================
 keepalive 10 120          # 心跳检测：10秒发一次包，120秒无响应则断开
-allow-compression no      # 禁用压缩，防止CRIME攻击，合规要求
-# user nobody               # 以最小权限用户运行，防止提权
-# group nogroup
+comp-lzo no               # 禁用压缩，防止CRIME攻击，合规要求
+user nobody               # 以最小权限用户运行，防止提权
+group nogroup
 persist-key
 persist-tun               # 断线重连时保留配置，避免反复认证
 
