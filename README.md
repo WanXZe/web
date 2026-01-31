@@ -1,2 +1,2 @@
-# VPN内是前端的管理网站，buildVpn是一键搭建VPN
-# 注意buildVpn内含有搭建网站的代码，如下载buildvpn无需下载vpn
+# buildVpn是一键搭建VPN
+# web则是前端管理的
